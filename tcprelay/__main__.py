@@ -8,14 +8,17 @@ class TCPRelay(Thread):
     client: socket.socket
     server: socket.socket
     buf_size: int
+    name: str
     running = True
 
-    def __init__(self, client: socket.socket, server: socket.socket, buf_size: Optional[int] = 1024):
+    def __init__(self, client: socket.socket, server: socket.socket, buf_size: Optional[int] = 1024, name: Optional[str] = "Unknown"):
         super().__init__()
 
         self.client = client
         self.server = server
+
         self.buf_size = buf_size
+        self.name = name
 
     def stop(self):
         self.running = False
@@ -30,7 +33,7 @@ class TCPRelay(Thread):
                 print("No data")
                 break
 
-            print(data)
+            print(f"[{self.name}]: {data}")
 
             self.server.send(data)
         
@@ -60,8 +63,8 @@ def main() -> int:
     print(f"Dialing: {(args.rhost, args.rport)}")
 
     # Relay data
-    client_to_server_relay = TCPRelay(incoming_connection, remote_sock)
-    server_to_client_relay = TCPRelay(remote_sock, incoming_connection)
+    client_to_server_relay = TCPRelay(incoming_connection, remote_sock, name="Client")
+    server_to_client_relay = TCPRelay(remote_sock, incoming_connection, name="Server")
 
     # Begin server-to-client
     server_to_client_relay.start()
